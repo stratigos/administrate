@@ -476,5 +476,23 @@ describe Administrate::Generators::DashboardGenerator, :generator do
         Manager.send(:remove_const, :FoosController)
       end
     end
+
+    it "creates a directory structure that preserves namespaced resources" do
+      begin
+        ActiveRecord::Schema.define { create_table :foo_bars }
+        module Foo; end
+        class Foo::Bar < ActiveRecord::Base; end
+
+        run_generator ["foo/bar"]
+        load file("app/controllers/admin/foo/bars_controller.rb")
+
+        expect(Admin::Foo::BarsController.ancestors).
+          to include(Admin::ApplicationController)
+      ensure
+        Foo.send(:remove_const, :BarsController)
+        Admin.send(:remove_const, :Foo)
+        remove_constants :Foo
+      end
+    end
   end
 end
